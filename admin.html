@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esthelle's Admin - Manage Products</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jost/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Jost', system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #211d18;
+      padding: 20px;
+    }    
+    /* LOGIN SCREEN */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #211d18 0%, #be6e7b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-family: 'Jost', system-ui, sans-serif;
+    }
+    .login-screen.hidden {
+      display: none;
+    }
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(33, 29, 24, 0.3);
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-header h2 {
+      font-size: 28px;
+      color: #211d18;
+      margin-bottom: 6px;
+    }
+    .login-header p {
+      color: #8b8173;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .login-hint {
+      text-align: center;
+      font-size: 12px;
+      color: #8b8173;
+      margin-top: 20px;
+    }
+    .login-hint code {
+      background: #f9f6f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #be6e7b;
+    }
+    
+    /* DASHBOARD */
+    .dashboard-hidden {
+      display: none;
+    }
+    .dashboard-hidden.show {
+      display: block;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .dashboard-header h1 {
+      color: #211d18;
+    }
+        .container { max-width: 1200px; margin: 0 auto; }
+    h1 { margin-bottom: 30px; color: #211d18; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e4d9c6;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-bottom: 3px solid transparent;
+      color: #8b8173;
+      transition: all 0.3s;
+    }
+    .tab-btn.active {
+      color: #211d18;
+      border-bottom-color: #be6e7b;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Products Table */
+    .products-table {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(33,29,24,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #f9f6f0;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e4d9c6;
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e4d9c6;
+    }
+    tr:hover { background: #fefdfb; }
+    
+    .price-cell { font-weight: 600; }
+    .actions { display: flex; gap: 8px; }
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    .btn-primary { background: #211d18; color: #f5eee1; }
+    .btn-primary:hover { background: #be6e7b; }
+    .btn-danger { background: #be6e7b; color: white; }
+    .btn-danger:hover { background: #a65867; }
+    .btn-secondary { background: #e4d9c6; color: #211d18; }
+    .btn-secondary:hover { background: #d4c9b6; }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e4d9c6;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #be6e7b;
+      box-shadow: 0 0 0 3px rgba(190,110,123,0.1);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .add-form {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(33,29,24,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .message {
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .message.show { display: block; }
+    .message.success { background: #e7f8ee; color: #128c4b; }
+    .message.error { background: #ffe7e7; color: #c41e3a; }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(33,29,24,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: #8b8173;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(33,29,24,0.1);
+    }
+    .stat-number { font-size: 28px; font-weight: 700; color: #be6e7b; }
+    .stat-label { font-size: 12px; color: #8b8173; margin-top: 8px; }
+    
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .search-bar input {
+      flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      table { font-size: 12px; }
+      td, th { padding: 8px; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-header">
+        <h2>✦ Esthelle's Admin</h2>
+        <p>Secure Access</p>
+      </div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="passwordInput" placeholder="Enter admin password" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary">Access Dashboard</button>
+      </form>
+      <p class="login-hint">Default password: <code>esthelle2024</code></p>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard (hidden until login) -->
+  <div id="dashboard" class="dashboard-hidden">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>✦ Esthelle's Admin Dashboard</h1>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="totalProducts">0</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalValue">GH₵0</div>
+        <div class="stat-label">Total Inventory Value</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="avgPrice">GH₵0</div>
+        <div class="stat-label">Average Price</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="onSale">0</div>
+        <div class="stat-label">On Sale</div>
+      </div>
+    </div>
+    
+    <div id="message" class="message"></div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="view">View All</button>
+      <button class="tab-btn" data-tab="add">Add New Dress</button>
+      <button class="tab-btn" data-tab="export">Export/Import</button>
+    </div>
+    
+    <!-- View All Tab -->
+    <div id="view-tab" class="tab-content active">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name or type...">
+        <button class="btn btn-secondary" onclick="loadProducts()">Reset</button>
+      </div>
+      <div class="products-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Price</th>
+              <th>Old Price</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Add New Tab -->
+    <div id="add-tab" class="tab-content">
+      <div class="add-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dress Name *</label>
+            <input type="text" id="formName" placeholder="e.g., Adom Linen Wrap Dress">
+          </div>
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="formType">
+              <option value="">Select type</option>
+              <option value="casual">Casual</option>
+              <option value="formal">Formal</option>
+              <option value="party">Party</option>
+              <option value="seasonal">Seasonal</option>
+              <option value="maxi">Maxi</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Length *</label>
+            <select id="formLength">
+              <option value="">Select length</option>
+              <option value="mini">Mini</option>
+              <option value="midi">Midi</option>
+              <option value="maxi">Maxi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Image URL *</label>
+            <input type="text" id="formImg" placeholder="https://...">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price (GH₵) *</label>
+            <input type="number" id="formPrice" placeholder="240">
+          </div>
+          <div class="form-group">
+            <label>Original Price (GH₵)</label>
+            <input type="number" id="formOldPrice" placeholder="320">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rating</label>
+            <input type="number" id="formRating" step="0.1" min="0" max="5" placeholder="4.8">
+          </div>
+          <div class="form-group">
+            <label>Number of Reviews</label>
+            <input type="number" id="formReviews" placeholder="124">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Colors (comma-separated)</label>
+            <input type="text" id="formColors" placeholder="Cream,Sage,Black">
+          </div>
+          <div class="form-group">
+            <label>Sizes (comma-separated)</label>
+            <input type="text" id="formSizes" placeholder="XS,S,M,L,XL">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Badge</label>
+            <input type="text" id="formBadge" placeholder="e.g., Bestseller, New In">
+          </div>
+          <div class="form-group">
+            <label>Badge Color</label>
+            <select id="formBc">
+              <option value="">None</option>
+              <option value="b-gold">Gold</option>
+              <option value="b-ink">Ink</option>
+              <option value="b-blush">Blush</option>
+              <option value="b-sale">Sale</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addProduct()">Add Dress</button>
+          <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Export/Import Tab -->
+    <div id="export-tab" class="tab-content">
+      <div style="background: white; padding: 24px; border-radius: 8px;">
+        <h3 style="margin-bottom: 16px;">Export Products as JSON</h3>
+        <p style="margin-bottom: 16px; color: #8b8173;">Click below to download your products as a JSON file for backup or sharing:</p>
+        <button class="btn btn-primary" onclick="exportData()">📥 Download JSON</button>
+        
+        <h3 style="margin-top: 32px; margin-bottom: 16px;">Import Products from JSON</h3>
+        <p style="margin-bottom: 16px; color: #8b8173;">Upload a JSON file to import products (will merge with existing):</p>
+        <div class="form-group">
+          <input type="file" id="importFile" accept=".json">
+        </div>
+        <button class="btn btn-primary" onclick="importData()">📤 Import JSON</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      <div class="modal-header">Edit Dress</div>
+      <div id="editForm"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    /* ================= PASSWORD PROTECTION ================= */
+    const ADMIN_PASSWORD = 'esthelle2026'; // Change this to your desired password
+    
+    function handleLogin(event) {
+      event.preventDefault();
+      const password = document.getElementById('passwordInput').value;
+      
+      if (password === ADMIN_PASSWORD) {
+        // Store session (in browser memory only, not localStorage for security)
+        sessionStorage.setItem('eh_admin_logged_in', 'true');
+        showDashboard();
+      } else {
+        alert('❌ Incorrect password. Please try again.');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+    
+    function showDashboard() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('dashboard').classList.add('show');
+      loadProducts();
+    }
+    
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.removeItem('eh_admin_logged_in');
+        document.getElementById('dashboard').classList.remove('show');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+    
+    // Check if already logged in on page load
+    window.addEventListener('load', () => {
+      if (sessionStorage.getItem('eh_admin_logged_in') === 'true') {
+        showDashboard();
+      }
+    });
+    
+    // Prevent going back after logout
+    window.addEventListener('beforeunload', () => {
+      if (!sessionStorage.getItem('eh_admin_logged_in')) {
+        sessionStorage.removeItem('eh_admin_logged_in');
+      }
+    });
+    
+    /* ================= ADMIN DASHBOARD ================= */
+    let products = [];
+    let editingId = null;
+    
+    // Format currency
+    const fmt = n => 'GH₵' + n.toLocaleString('en-GH');
+    
+    // Load products from JSON
+    async function loadProducts() {
+      try {
+        const response = await fetch('products.json');
+        const data = await response.json();
+        products = data.products.map(p => ({
+          ...p,
+          img: data.images[p.img] || p.img
+        }));
+        renderTable();
+        updateStats();
+      } catch (e) {
+        showMessage('Failed to load products', 'error');
+      }
+    }
+    
+    // Render products table
+    function renderTable() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(searchTerm) || 
+        p.type.toLowerCase().includes(searchTerm)
+      );
+      
+      const html = filtered.map(p => `
+        <tr>
+          <td>#${p.id}</td>
+          <td>${p.name}</td>
+          <td>${p.type}</td>
+          <td class="price-cell">${fmt(p.price)}</td>
+          <td>${p.old ? fmt(p.old) : '—'}</td>
+          <td>${p.rating} ⭐</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-secondary" onclick="editProduct(${p.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      
+      document.getElementById('productsTableBody').innerHTML = html;
+    }
+    
+    // Update stats
+    function updateStats() {
+      const totalValue = products.reduce((sum, p) => sum + p.price, 0);
+      const avgPrice = Math.round(totalValue / products.length);
+      const onSale = products.filter(p => p.old).length;
+      
+      document.getElementById('totalProducts').textContent = products.length;
+      document.getElementById('totalValue').textContent = fmt(totalValue);
+      document.getElementById('avgPrice').textContent = fmt(avgPrice);
+      document.getElementById('onSale').textContent = onSale;
+    }
+    
+    // Add new product
+    async function addProduct() {
+      const name = document.getElementById('formName').value.trim();
+      const type = document.getElementById('formType').value;
+      const length = document.getElementById('formLength').value;
+      const img = document.getElementById('formImg').value.trim();
+      const price = parseFloat(document.getElementById('formPrice').value);
+      const oldPrice = document.getElementById('formOldPrice').value ? parseFloat(document.getElementById('formOldPrice').value) : null;
+      const rating = parseFloat(document.getElementById('formRating').value) || 4.5;
+      const reviews = parseInt(document.getElementById('formReviews').value) || 0;
+      const colors = document.getElementById('formColors').value.split(',').map(c => c.trim()).filter(c => c);
+      const sizes = document.getElementById('formSizes').value.split(',').map(s => s.trim()).filter(s => s);
+      const badge = document.getElementById('formBadge').value.trim() || null;
+      const bc = document.getElementById('formBc').value || null;
+      
+      if (!name || !type || !length || !img || !price || !colors.length || !sizes.length) {
+        showMessage('Please fill all required fields', 'error');
+        return;
+      }
+      
+      const newId = Math.max(...products.map(p => p.id), 0) + 1;
+      const newProduct = {
+        id: newId,
+        name, type, length, img, price, old: oldPrice, rating, reviews, colors, sizes, badge, bc, added: Math.floor(Date.now() / 1000)
+      };
+      
+      products.push(newProduct);
+      await saveToServer();
+      clearForm();
+      showMessage('✓ Dress added successfully!', 'success');
+    }
+    
+    // Edit product
+    function editProduct(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      editingId = id;
+      const form = `
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="editName" value="${product.name}">
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="editType">
+              <option value="casual" ${product.type === 'casual' ? 'selected' : ''}>Casual</option>
+              <option value="formal" ${product.type === 'formal' ? 'selected' : ''}>Formal</option>
+              <option value="party" ${product.type === 'party' ? 'selected' : ''}>Party</option>
+              <option value="seasonal" ${product.type === 'seasonal' ? 'selected' : ''}>Seasonal</option>
+              <option value="maxi" ${product.type === 'maxi' ? 'selected' : ''}>Maxi</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price (GH₵)</label>
+            <input type="number" id="editPrice" value="${product.price}">
+          </div>
+          <div class="form-group">
+            <label>Old Price (GH₵)</label>
+            <input type="number" id="editOldPrice" value="${product.old || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rating</label>
+            <input type="number" id="editRating" step="0.1" value="${product.rating}">
+          </div>
+          <div class="form-group">
+            <label>Reviews</label>
+            <input type="number" id="editReviews" value="${product.reviews}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Colors</label>
+            <input type="text" id="editColors" value="${product.colors.join(', ')}">
+          </div>
+          <div class="form-group">
+            <label>Badge</label>
+            <input type="text" id="editBadge" value="${product.badge || ''}">
+          </div>
+        </div>
+      `;
+      document.getElementById('editForm').innerHTML = form;
+      document.getElementById('editModal').classList.add('show');
+    }
+    
+    // Save edit
+    async function saveEdit() {
+      const product = products.find(p => p.id === editingId);
+      if (!product) return;
+      
+      product.name = document.getElementById('editName').value;
+      product.type = document.getElementById('editType').value;
+      product.price = parseFloat(document.getElementById('editPrice').value);
+      product.old = document.getElementById('editOldPrice').value ? parseFloat(document.getElementById('editOldPrice').value) : null;
+      product.rating = parseFloat(document.getElementById('editRating').value);
+      product.reviews = parseInt(document.getElementById('editReviews').value);
+      product.colors = document.getElementById('editColors').value.split(',').map(c => c.trim()).filter(c => c);
+      product.badge = document.getElementById('editBadge').value || null;
+      
+      await saveToServer();
+      closeEditModal();
+      renderTable();
+      updateStats();
+      showMessage('✓ Changes saved!', 'success');
+    }
+    
+    // Close edit modal
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+      editingId = null;
+    }
+    
+    // Delete product
+    async function deleteProduct(id) {
+      if (!confirm('Are you sure? This action cannot be undone.')) return;
+      products = products.filter(p => p.id !== id);
+      await saveToServer();
+      renderTable();
+      updateStats();
+      showMessage('✓ Product deleted', 'success');
+    }
+    
+    // Save to server (localStorage for now)
+    async function saveToServer() {
+      try {
+        localStorage.setItem('eh_products', JSON.stringify(products));
+        // In a real app, you'd POST to a backend API here
+      } catch (e) {
+        showMessage('Failed to save changes', 'error');
+      }
+    }
+    
+    // Export data
+    function exportData() {
+      const dataStr = JSON.stringify({ products }, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `esthelles-products-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // Import data
+    function importData() {
+      const file = document.getElementById('importFile').files[0];
+      if (!file) {
+        showMessage('Please select a file', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.products && Array.isArray(data.products)) {
+            products = products.concat(data.products.filter(p => !products.some(x => x.id === p.id)));
+            await saveToServer();
+            loadProducts();
+            showMessage('✓ Products imported successfully!', 'success');
+            document.getElementById('importFile').value = '';
+          } else {
+            showMessage('Invalid file format', 'error');
+          }
+        } catch (e) {
+          showMessage('Failed to parse JSON file', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    // Show message
+    function showMessage(msg, type) {
+      const el = document.getElementById('message');
+      el.textContent = msg;
+      el.className = `message show ${type}`;
+      setTimeout(() => el.classList.remove('show'), 4000);
+    }
+    
+    // Clear form
+    function clearForm() {
+      document.getElementById('formName').value = '';
+      document.getElementById('formType').value = '';
+      document.getElementById('formLength').value = '';
+      document.getElementById('formImg').value = '';
+      document.getElementById('formPrice').value = '';
+      document.getElementById('formOldPrice').value = '';
+      document.getElementById('formRating').value = '';
+      document.getElementById('formReviews').value = '';
+      document.getElementById('formColors').value = '';
+      document.getElementById('formSizes').value = '';
+      document.getElementById('formBadge').value = '';
+      document.getElementById('formBc').value = '';
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        document.getElementById(e.target.dataset.tab + '-tab').classList.add('active');
+      });
+    });
+    
+    // Search
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+  </script>
+</body>
+</html>
