@@ -542,15 +542,24 @@
     // Format currency
     const fmt = n => 'GH₵' + n.toLocaleString('en-GH');
     
-    // Load products from JSON
+    // Load products from JSON file or localStorage
     async function loadProducts() {
       try {
-        const response = await fetch('products.json');
-        const data = await response.json();
-        products = data.products.map(p => ({
-          ...p,
-          img: data.images[p.img] || p.img
-        }));
+        // First try localStorage (user edits from admin panel)
+        const localData = localStorage.getItem('eh_products_local');
+        if (localData) {
+          products = JSON.parse(localData);
+          console.log('Loaded products from browser storage');
+        } else {
+          // Fall back to products.json
+          const response = await fetch('products.json');
+          const data = await response.json();
+          products = data.products.map(p => ({
+            ...p,
+            img: typeof p.img === 'string' && p.img.startsWith('p') ? data.images[p.img] || p.img : p.img
+          }));
+          console.log('Loaded products from products.json');
+        }
         renderTable();
         updateStats();
       } catch (e) {
@@ -625,9 +634,9 @@
       };
       
       products.push(newProduct);
-      await saveToServer();
+      await saveProductsLocally();
       clearForm();
-      showMessage('✓ Dress added successfully!', 'success');
+      showMessage('✓ Dress added successfully! Don\'t forget to export and commit to GitHub.', 'success');
     }
     
     // Edit product
@@ -725,13 +734,23 @@
       showMessage('✓ Product deleted', 'success');
     }
     
-    // Save to server (localStorage for now)
+    // Save to server (localStorage for GitHub Pages)
     async function saveToServer() {
       try {
-        localStorage.setItem('eh_products', JSON.stringify(products));
-        // In a real app, you'd POST to a backend API here
+        // Save to browser localStorage
+        localStorage.setItem('eh_products_local', JSON.stringify(products));
+        showMessage('✓ Saved locally. Export to update GitHub!', 'success');
       } catch (e) {
         showMessage('Failed to save changes', 'error');
+      }
+    }
+    
+    // Save products locally to localStorage
+    async function saveProductsLocally() {
+      try {
+        localStorage.setItem('eh_products_local', JSON.stringify(products));
+      } catch (e) {
+        showMessage('Failed to save to browser storage', 'error');
       }
     }
     
